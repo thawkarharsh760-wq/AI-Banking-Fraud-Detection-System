@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Banking Fraud Detection</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#0f172a,#1e3a8a);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    padding:20px;
+}
+
+.container{
+    background:white;
+    width:950px;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0px 0px 25px rgba(0,0,0,0.3);
+    text-align:center;
+}
+
+h1{
+    color:#0f172a;
+}
+
+.dashboard{
+    display:flex;
+    justify-content:space-around;
+    gap:10px;
+    margin-bottom:25px;
+}
+
+.card{
+    width:30%;
+    padding:15px;
+    border-radius:12px;
+    color:white;
+}
+
+.blue{
+    background:#2563eb;
+}
+
+.red{
+    background:#dc2626;
+}
+
+.green{
+    background:#16a34a;
+}
+
+input,select{
+    width:90%;
+    padding:12px;
+    margin-top:10px;
+    border-radius:8px;
+    border:1px solid #ccc;
+}
+
+button{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    border-radius:8px;
+    margin-top:15px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+.result{
+    margin-top:20px;
+    padding:15px;
+    background:#f1f5f9;
+    border-radius:10px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.score-box{
+    margin-top:15px;
+}
+
+progress{
+    width:90%;
+    height:25px;
+}
+
+table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+}
+
+th{
+    background:#2563eb;
+    color:white;
+    padding:10px;
+}
+
+td{
+    border:1px solid #ddd;
+    padding:8px;
+}
+
+.footer{
+    margin-top:25px;
+    color:gray;
+    font-size:13px;
+}
+
+canvas{
+    max-width:400px;
+    margin:auto;
+    margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🏦 AI Banking Fraud Detection</h1>
+<div style="text-align:right; margin-bottom:10px;">
+
+    <a href="/logout">
+
+        <button type="button"
+        style="background:#dc2626;">
+            🚪 Logout
+        </button>
+
+    </a>
+
+</div>
+
+<div class="dashboard">
+
+<div class="card blue">
+<h3>Total Transactions</h3>
+<h2>{{ total_transactions }}</h2>
+</div>
+
+<div class="card red">
+<h3>Fraud Transactions</h3>
+<h2>{{ fraud_count }}</h2>
+</div>
+
+<div class="card green">
+<h3>Safe Transactions</h3>
+<h2>{{ safe_count }}</h2>
+</div>
+
+</div>
+
+<form method="POST">
+
+<input type="text"
+name="sender"
+placeholder="Sender Name"
+required>
+
+<input type="text"
+name="receiver"
+placeholder="Receiver Name"
+required>
+
+<input type="number"
+name="amount"
+placeholder="Enter Transaction Amount"
+required>
+
+<label><b>Transaction Time</b></label>
+
+<input type="time"
+name="time"
+required>
+
+<label><b>Transaction Location</b></label>
+
+<select name="city">
+
+<option>Nagpur</option>
+<option>Mumbai</option>
+<option>Delhi</option>
+<option>Kolkata</option>
+<option>Unknown</option>
+
+</select>
+
+<label><b>OTP Verification Status</b></label>
+
+<select name="otp">
+
+<option value="yes">OTP Verified</option>
+<option value="no">OTP Not Verified</option>
+
+</select>
+
+<br><br>
+
+<button type="submit">
+Check Transaction
+</button>
+
+</form>
+
+{% if result %}
+
+<div class="result">
+{{ result }}
+</div>
+
+{% endif %}
+
+<h3>{{ recommendation }}</h3>
+
+<h3>{{ sms_alert }}</h3>
+
+<h3>{{ email_alert }}</h3>
+<h3 style="color:red;">
+{{ blacklist_alert }}</h3>
+
+<div class="score-box">
+
+<h3>Risk Score: {{ score }}%</h3>
+
+<progress value="{{ score }}" max="100"></progress>
+
+<h3>Trust Score: {{ trust }}%</h3>
+
+<progress value="{{ trust }}" max="100"></progress>
+
+</div>
+
+<h2>📊 Fraud Analytics Chart</h2>
+
+<canvas id="fraudChart"></canvas>
+
+<script>
+
+const ctx = document.getElementById('fraudChart');
+
+new Chart(ctx, {
+
+    type: 'pie',
+
+    data: {
+
+        labels: ['Fraud Transactions', 'Safe Transactions'],
+
+        datasets: [{
+
+            data: [{{ fraud_count }}, {{ safe_count }}],
+
+            backgroundColor: [
+
+                '#dc2626',
+                '#16a34a'
+
+            ]
+
+        }]
+    }
+});
+
+</script>
+<a href="/clear_history">
+
+<button type="button"
+style="background:#dc2626;">
+🗑 Clear History
+</button>
+
+</a>
+
+<h2>📜 Transaction History</h2>
+
+<table>
+
+<tr>
+
+<th>Sender</th>
+<th>Receiver</th>
+<th>Amount</th>
+<th>Location</th>
+<th>Time</th>
+<th>Risk Score</th>
+<th>Status</th>
+
+</tr>
+
+{% for item in history %}
+
+<tr>
+
+<td>{{ item.sender }}</td>
+<td>{{ item.receiver }}</td>
+<td>₹{{ item.amount }}</td>
+<td>{{ item.city }}</td>
+<td>{{ item.time }}</td>
+<td>{{ item.score }}%</td>
+<td>{{ item.status }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+<br><br>
+
+<a href="/download_report">
+
+<button type="button">
+📄 Download Fraud Report
+</button>
+
+</a>
+
+<div class="footer">
+
+Powered by Machine Learning, Flask & SQLite
+
+</div>
+
+</div>
+{% if score >= 70 %}
+
+<script>
+
+alert("🚨 WARNING: High Risk Fraud Transaction Detected!");
+
+</script>
+
+{% endif %}
+
+</body>
+
+</html>
